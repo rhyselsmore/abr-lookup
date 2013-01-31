@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template
 from suds.client import Client
 
 app = Flask(__app__)
+app.config.from_object('abr.settings')
 
 def lookup(search):
     client = Client("http://abr.business.gov.au/abrxmlsearch/ABRXMLSearch.asmx?WSDL")
