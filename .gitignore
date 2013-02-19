@@ -1,12 +1,5 @@
 .DS_Store
 *.py[co]
-salt_minion_config
-salt
-celerybeat*
-coverage.xml
-nosetests.xml
-flask_auth2
-salt-config
 
 # Packages
 *.egg
