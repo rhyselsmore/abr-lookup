@@ -25,8 +25,16 @@ def lookup(search):
 
     response = client.service.ABRSearchByABN(request).response
 
+    if hasattr(response,'exception'):
+        d['status'] = response.exception.exceptionDescription
+        resp = jsonify(**d)
+        resp.status_code = 500
+        return resp
+
     if not hasattr(response,'businessEntity'):
-        return d
+        resp = jsonify(**d)
+        resp.status_code = 404
+        return resp
 
     entity = response.businessEntity
 
@@ -47,7 +55,7 @@ def lookup(search):
     d["status"] = entity.entityStatus[0].entityStatusCode
     d["successful"] = True
 
-    return d
+    return jsonify(**d)
 
 @app.route('/')
 def index():
@@ -55,8 +63,7 @@ def index():
 
 @app.route('/api/lookup/<string:search>',methods=['GET'])
 def api_lookup(search):
-    lookup(search)
-    return jsonify(**lookup(search))
+    return lookup(search)
 
 if __name__ == "__main__":
     app.run()
