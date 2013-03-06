@@ -1,10 +1,28 @@
-from flask import Flask, jsonify, render_template, abort
+from flask import Flask, jsonify, render_template, abort, request, current_app
 from suds.client import Client
+from functools import wraps
 
 app = Flask(__name__)
 app.config.from_object('abr.settings')
 app.debug = True
 app.config.setdefault('ABR_GUID','None')
+
+def requires_auth(f):
+    """ Validates the API call """
+
+    def check_auth(username,token):
+        u = current_app.config.get('USERNAME')
+        t = current_app.config.get('TOKEN')
+
+        return username == u and token == t
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            abort(401)
+        return f(*args, **kwargs)
+    return decorated
 
 def lookup(search):
     
@@ -27,8 +45,12 @@ def lookup(search):
 
     if hasattr(response,'exception'):
         d['status'] = response.exception.exceptionDescription
+        if response.exception.exceptionCode == "Search":
+            status_code = 404
+        else:
+            status_code = 500
         resp = jsonify(**d)
-        resp.status_code = 500
+        resp.status_code = status_code
         return resp
 
     if not hasattr(response,'businessEntity'):
@@ -57,11 +79,8 @@ def lookup(search):
 
     return jsonify(**d)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 @app.route('/api/lookup/<string:search>',methods=['GET'])
+@requires_auth
 def api_lookup(search):
     return lookup(search)
 
