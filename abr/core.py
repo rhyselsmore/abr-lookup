@@ -45,6 +45,7 @@ def lookup(search):
 
     if hasattr(response,'exception'):
         d['status'] = response.exception.exceptionDescription
+        print response
         if response.exception.exceptionCode == "Search":
             status_code = 404
         else:
@@ -54,6 +55,7 @@ def lookup(search):
         return resp
 
     if not hasattr(response,'businessEntity'):
+        print response
         resp = jsonify(**d)
         resp.status_code = 404
         return resp
